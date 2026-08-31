@@ -117,8 +117,15 @@ CREATE DATABASE semicolon_safety
 
 ### 2. 로컬 설정 파일 작성
 
-`src/main/resources/application-local.properties` 를 만들고 아래 내용을 채웁니다.
-**이 파일은 `.gitignore` 에 등록되어 있으므로 커밋되지 않습니다.**
+템플릿을 복사한 뒤 본인 환경에 맞게 값을 채웁니다.
+**복사본은 `.gitignore` 에 등록되어 있으므로 커밋되지 않습니다.**
+
+```powershell
+cd src\main\resources
+copy application-local.properties.example application-local.properties
+```
+
+채워야 할 값:
 
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/semicolon_safety?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
@@ -138,8 +145,11 @@ jwt.refresh-token-validity=1209600000
 ### 3. 실행
 
 ```bash
-./gradlew bootRun --args='--spring.profiles.active=local'
+./gradlew bootRun
 ```
+
+> `local` 이 기본 프로파일로 지정되어 있어 별도 옵션 없이 실행됩니다.
+> 테스트는 Gradle 이 `test` 프로파일을 강제하므로 인메모리 H2 로 돌아갑니다 — DB 없이도 `./gradlew test` 가 통과합니다.
 
 ### 4. 기타 명령어
 
@@ -161,7 +171,7 @@ src/main/java/com/example/be
 ├── global/                     # 도메인 공통 (횡단 관심사)
 │   ├── common/                 # ApiResponse, PageResponse
 │   ├── config/                 # Security, Swagger, JPA, CORS
-│   ├── entity/                 # BaseTimeEntity
+│   ├── entity/                 # BaseTimeEntity, BaseCreatedEntity
 │   ├── exception/              # ErrorCode, BusinessException, GlobalExceptionHandler
 │   └── security/               # JwtTokenProvider, JwtAuthenticationFilter
 └── domain/
@@ -200,10 +210,20 @@ domain/worker/
 
 ```json
 // 성공
-{ "success": true, "data": { "workerId": 1, "name": "김안전" }, "message": null }
+{ "success": true, "data": { "workerId": 1, "name": "김안전" }, "message": null, "code": null }
 
 // 실패
-{ "success": false, "data": null, "message": "존재하지 않는 작업자입니다." }
+{ "success": false, "data": null, "message": "존재하지 않는 작업자입니다.", "code": "WORKER_NOT_FOUND" }
+
+// 검증 실패 - data 에 어떤 필드가 왜 틀렸는지 담긴다
+{
+  "success": false,
+  "data": [
+    { "field": "employeeNo", "rejectedValue": null, "reason": "사번은 필수입니다." }
+  ],
+  "message": "입력값이 올바르지 않습니다.",
+  "code": "INVALID_INPUT_VALUE"
+}
 ```
 
 ### 상태 코드

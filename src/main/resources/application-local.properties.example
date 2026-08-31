@@ -1,0 +1,32 @@
+# ===================================================================
+# 로컬 개발 설정 템플릿
+#
+# 이 파일을 같은 위치에 application-local.properties 로 복사한 뒤
+# 본인 환경에 맞게 값을 채우세요. (복사본은 .gitignore 대상이라 커밋되지 않습니다)
+#
+#   Windows : copy application-local.properties.example application-local.properties
+#   macOS   : cp application-local.properties.example application-local.properties
+#
+# 사전 준비 - MySQL 에 DB 생성:
+#   CREATE DATABASE semicolon_safety
+#     DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+# ===================================================================
+
+# ---------- DataSource ----------
+spring.datasource.url=jdbc:mysql://localhost:3306/semicolon_safety?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+spring.datasource.username=CHANGE_ME
+spring.datasource.password=CHANGE_ME
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# ---------- JPA ----------
+# 개발 초기에는 update, 스키마가 굳으면 validate 로 바꾸는 것을 권장한다.
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# ---------- JWT (2단계에서 사용) ----------
+# 최소 32바이트 이상의 임의 문자열. 아래 명령으로 생성할 수 있다.
+#   openssl rand -base64 48
+jwt.secret=CHANGE_ME_TO_A_RANDOM_STRING_AT_LEAST_32_BYTES_LONG
+jwt.access-token-validity=1800000
+jwt.refresh-token-validity=1209600000
