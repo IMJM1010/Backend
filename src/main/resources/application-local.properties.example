@@ -28,5 +28,4 @@ spring.jpa.properties.hibernate.format_sql=true
 # 최소 32바이트 이상의 임의 문자열. 아래 명령으로 생성할 수 있다.
 #   openssl rand -base64 48
 jwt.secret=CHANGE_ME_TO_A_RANDOM_STRING_AT_LEAST_32_BYTES_LONG
-jwt.access-token-validity=1800000
-jwt.refresh-token-validity=1209600000
+# 유효기간(jwt.access-token-validity 등)은 application.properties 에 공통으로 있다.

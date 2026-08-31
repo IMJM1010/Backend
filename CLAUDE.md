@@ -59,16 +59,24 @@
 ```
 
 ### 현재 상태 (2026-08-31)
+- **2단계 인증 진행 중.** Manager 도메인 + JWT 인증 + Auth API 4종 완료. Managers CRUD 는 다음 PR.
+  - JWT 는 **Spring Security 리소스 서버**(`spring-boot-starter-security-oauth2-resource-server`, Nimbus)를 쓴다.
+    jjwt 가 아니다. 토큰 검증은 커스텀 필터가 아니라 `BearerTokenAuthenticationFilter` 가 처리한다.
+  - 인증된 관리자 식별자는 `SecurityUtils.getCurrentManagerId()` 로 꺼낸다.
+  - `managers` 에 ERD 에 없는 `refresh_token`, `refresh_token_expires_at` 컬럼을 추가했다. **ERDCloud 반영 필요.**
+  - 로컬에서는 `LocalDataInitializer` 가 `admin` / `admin1234!` ADMIN 계정을 자동 생성한다 (local 프로파일 전용).
 - **1단계 기반 세팅 완료.** `global/` 패키지에 공통 응답·예외·설정·엔티티 베이스가 들어가 있다.
   - `global/common` — `ApiResponse`, `PageResponse`
   - `global/exception` — `ErrorCode`, `BusinessException`, `ValidationError`, `GlobalExceptionHandler`
   - `global/entity` — `BaseTimeEntity`, `BaseCreatedEntity`
-  - `global/config` — `JpaConfig`, `SecurityConfig`(임시 permitAll), `CorsConfig`, `SwaggerConfig`
+  - `global/config` — `JpaConfig`, `SecurityConfig`, `CorsConfig`, `SwaggerConfig`, `JwtConfig`
+  - `global/security` — `TokenProvider`, `SecurityUtils`, `JwtAuthenticationEntryPoint`, `JwtAccessDeniedHandler`
 - 도메인 구현체는 아직 없음. 다음은 2단계(인증).
 - 실행 프로파일은 `local` 이 기본. DB 접속 정보는 `application-local.properties`(gitignore 대상)에 각자 작성.
 - 테스트는 Gradle 이 `test` 프로파일을 강제하여 인메모리 H2 로 실행된다.
   테스트 클래스에 `@ActiveProfiles` 를 따로 붙이지 않아도 된다.
-- **`SecurityConfig` 는 전체 허용 상태다.** 2단계에서 JWT 필터와 인가 규칙으로 교체할 것.
+- 디바이스/센서 수집 API(`POST /api/vital-records`, `/api/env-records`)는 아직 일반 JWT 인증 대상이다.
+  API Key 트랙 분리는 4단계에서.
 
 ### 착수 전 정리가 필요한 의존성 이슈
 - `spring-ai-starter-vector-store-s3` 가 들어 있으나 AI 인사이트 생성에는 **채팅 모델 starter**
@@ -413,6 +421,12 @@ public class Worker extends BaseTimeEntity {
 - `@ToString`, `@EqualsAndHashCode` 를 엔티티에 붙이지 않는다 (LAZY 프록시 순환 참조).
 - `cascade = REMOVE` / `orphanRemoval` 은 신중히. 이력성 테이블은 삭제 전파 금지.
 - 필드는 camelCase, 컬럼은 snake_case를 `@Column(name = ...)` 으로 **명시**한다 (네이밍 전략에 의존하지 않는다).
+
+### record 주의사항
+- **record 에는 컴포넌트와 같은 이름의 무인자 메서드를 선언할 수 없다.** 접근자와 충돌해 컴파일 에러가 난다.
+  예: `record ApiResponse(boolean success, ...)` 에 `static ApiResponse success()` → 불가.
+  (그래서 데이터 없는 성공 응답이 `ApiResponse.noContent()` 다.)
+  인자가 있는 정적 팩토리는 문제없다.
 
 ### 삭제 정책
 - `emergency_actions`, `incidents`, `alerts` 는 감사/이력 성격 → **하드 삭제 지양**.
