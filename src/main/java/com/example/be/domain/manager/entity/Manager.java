@@ -52,6 +52,15 @@ public class Manager extends BaseTimeEntity {
     private String profileImageUrl;
 
     /*
+     * ERD 에 없는 확장 컬럼. 관리자를 실제로 삭제하면 그가 처리한 사고(handled_by),
+     * 확인한 알림(confirmed_by), 실행한 긴급조치(manager_id) 의 FK 가 깨지거나 NULL 이 되어
+     * 이력을 신뢰할 수 없게 된다. 그래서 삭제 대신 비활성 처리한다.
+     * ※ ERDCloud 문서에도 반영할 것.
+     */
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
+
+    /*
      * 아래 두 컬럼은 ERD 에 없는 확장 컬럼이다.
      * 명세의 "로그아웃 = 토큰 무효화" 를 지키려면 서버가 유효한 refresh token 을 알고 있어야 하는데,
      * 순수 무상태 JWT 로는 발급된 토큰을 되돌릴 방법이 없다. 별도 테이블이나 Redis 를 두는 대신
@@ -72,6 +81,7 @@ public class Manager extends BaseTimeEntity {
         this.name = name;
         this.role = role != null ? role : ManagerRole.MANAGER;
         this.profileImageUrl = profileImageUrl;
+        this.active = true;
     }
 
     /* ---------- 상태 변경 ---------- */
@@ -101,6 +111,20 @@ public class Manager extends BaseTimeEntity {
         this.password = encodedPassword;
         // 비밀번호가 바뀌면 기존 세션은 끊는다.
         clearRefreshToken();
+    }
+
+    /** 계정 비활성화. 로그인과 토큰 재발급이 모두 막힌다. */
+    public void deactivate() {
+        this.active = false;
+        clearRefreshToken();
+    }
+
+    public void updateProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public boolean isAdmin() {
+        return this.role == ManagerRole.ADMIN;
     }
 
     public void updateProfile(String name, ManagerRole role, String profileImageUrl) {
