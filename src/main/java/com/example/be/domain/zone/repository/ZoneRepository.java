@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -30,4 +32,13 @@ public interface ZoneRepository extends JpaRepository<Zone, Long> {
 
     /** 수정 시 자기 자신은 중복 검사에서 제외한다. */
     boolean existsByProcessIdAndZoneCodeAndIdNot(Long processId, String zoneCode, Long id);
+
+    /**
+     * 구역에 남아 있는 재직 작업자 수. 구역 삭제 가드에 쓴다.
+     *
+     * <p>{@code ProcessRepository.countZonesOf} 와 같은 패턴이다. 부모(구역)가 자식(작업자)
+     * 서비스를 주입하면 순환 의존이 생기므로, 부모 쪽 리포지토리에서 JPQL 로 해결한다.
+     */
+    @Query("select count(w) from Worker w where w.zone.id = :zoneId and w.active = true")
+    long countActiveWorkersOf(@Param("zoneId") Long zoneId);
 }

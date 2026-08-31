@@ -92,9 +92,20 @@ public class ZoneService {
         return zone;
     }
 
+    /**
+     * 구역 삭제.
+     *
+     * <p>재직 중인 작업자가 남아 있으면 거부한다. 구역을 지우면 그 작업자들의 위치 정보가
+     * 사라져 현장 인원 현황이 어긋난다. 작업자를 먼저 다른 구역으로 옮기거나 퇴사 처리해야 한다.
+     */
     @Transactional
     public void delete(Long zoneId) {
         Zone zone = getById(zoneId);
+
+        if (zoneRepository.countActiveWorkersOf(zoneId) > 0) {
+            throw new BusinessException(ErrorCode.ZONE_HAS_WORKERS);
+        }
+
         zoneRepository.delete(zone);
         log.info("구역 삭제: zoneId={}", zoneId);
     }

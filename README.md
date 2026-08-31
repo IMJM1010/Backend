@@ -292,6 +292,7 @@ managers ──1:N── dashboard_widgets
 | `managers.is_active` | 재직 여부. 삭제 대신 비활성 처리 (ERD 확장 컬럼) |
 | `processes.status` | `RUNNING` / `STOPPED` |
 | `workers.safety_status` | `NORMAL` / `CAUTION` / `DANGER` / `EMERGENCY` |
+| `workers.employee_no` | 사번. 유니크 제약 추가 (ERD 확장) |
 | `wearable_devices.device_type` | `BAND` / `HELMET` / `TAG` |
 | `wearable_devices.connection_status` | `CONNECTED` / `DISCONNECTED` / `ERROR` |
 | `env_sensors.sensor_type` | `TEMPERATURE` / `HUMIDITY` / `FINE_DUST` / `OXYGEN` / `CHEMICAL` / `NOISE` |

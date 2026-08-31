@@ -71,6 +71,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/processes/**", "/api/zones/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/processes/**", "/api/zones/**").hasRole("ADMIN")
 
+                        // 작업자는 현장 인력 배치라 등록·수정을 MANAGER 도 한다.
+                        // 퇴사 처리만 인사 성격이라 ADMIN 으로 제한한다.
+                        .requestMatchers(HttpMethod.DELETE, "/api/workers/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated())
 
                 .oauth2ResourceServer(oauth2 -> oauth2
