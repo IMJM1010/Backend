@@ -20,6 +20,9 @@ public enum ErrorCode {
     INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "요청 값의 타입이 올바르지 않습니다."),
     MISSING_PARAMETER(HttpStatus.BAD_REQUEST, "필수 파라미터가 누락되었습니다."),
     MALFORMED_REQUEST_BODY(HttpStatus.BAD_REQUEST, "요청 본문을 읽을 수 없습니다."),
+    INVALID_PERIOD(HttpStatus.BAD_REQUEST, "조회 시작 일시가 종료 일시보다 늦을 수 없습니다."),
+    PERIOD_TOO_LONG(HttpStatus.BAD_REQUEST, "조회 기간이 너무 깁니다. 기간을 좁혀서 다시 요청해 주세요."),
+    FUTURE_MEASURED_AT(HttpStatus.BAD_REQUEST, "측정 일시는 미래일 수 없습니다."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메서드입니다."),
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."),
     DATA_INTEGRITY_VIOLATION(HttpStatus.CONFLICT, "데이터 무결성 제약에 위배됩니다."),
@@ -68,9 +71,13 @@ public enum ErrorCode {
     DEVICE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 디바이스입니다."),
     DUPLICATE_SERIAL_NO(HttpStatus.CONFLICT, "이미 등록된 시리얼 번호입니다."),
     DEVICE_ALREADY_ASSIGNED(HttpStatus.CONFLICT, "이미 다른 작업자에게 배정된 디바이스입니다."),
+    DUPLICATE_DEVICE_TYPE_FOR_WORKER(HttpStatus.CONFLICT, "해당 작업자가 이미 같은 종류의 디바이스를 착용 중입니다."),
+    DEVICE_RETIRED(HttpStatus.CONFLICT, "폐기 처리된 디바이스입니다."),
+    DEVICE_ALREADY_RETIRED(HttpStatus.CONFLICT, "이미 폐기 처리된 디바이스입니다."),
 
     /* ---------- 생체 기록 ---------- */
     VITAL_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 생체 기록입니다."),
+    NO_VITAL_RECORD(HttpStatus.NOT_FOUND, "해당 작업자의 생체 기록이 없습니다."),
 
     /* ---------- 환경 센서 / 기록 ---------- */
     SENSOR_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 환경 센서입니다."),

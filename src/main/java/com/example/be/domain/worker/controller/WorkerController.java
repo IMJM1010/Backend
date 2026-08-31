@@ -1,5 +1,7 @@
 package com.example.be.domain.worker.controller;
 
+import com.example.be.domain.wearabledevice.dto.response.WearableDeviceResponse;
+import com.example.be.domain.wearabledevice.service.WearableDeviceService;
 import com.example.be.domain.worker.dto.request.SafetyStatusUpdateRequest;
 import com.example.be.domain.worker.dto.request.WorkerCreateRequest;
 import com.example.be.domain.worker.dto.request.WorkerUpdateRequest;
@@ -28,6 +30,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
  * 작업자 API.
  *
@@ -42,6 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class WorkerController {
 
     private final WorkerService workerService;
+    private final WearableDeviceService wearableDeviceService;
 
     @Operation(summary = "작업자 목록 조회",
             description = "zoneId, isActive, safetyStatus 로 필터링할 수 있다. 기본 정렬은 등록 최신순.")
@@ -102,6 +107,17 @@ public class WorkerController {
 
         return ResponseEntity.ok(ApiResponse.success(
                 WorkerResponse.from(workerService.changeZone(workerId, request.zoneId()))));
+    }
+
+    @Operation(summary = "작업자 웨어러블 디바이스 조회", description = "해당 작업자가 착용 중인 디바이스 목록.")
+    @GetMapping("/{workerId}/wearable-devices")
+    public ResponseEntity<ApiResponse<List<WearableDeviceResponse>>> getWearableDevices(
+            @PathVariable Long workerId) {
+
+        return ResponseEntity.ok(ApiResponse.success(
+                wearableDeviceService.getDevicesByWorkerId(workerId).stream()
+                        .map(WearableDeviceResponse::from)
+                        .toList()));
     }
 
     @Operation(summary = "작업자 퇴사 처리",

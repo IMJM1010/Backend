@@ -75,6 +75,20 @@ public class SecurityConfig {
                         // 퇴사 처리만 인사 성격이라 ADMIN 으로 제한한다.
                         .requestMatchers(HttpMethod.DELETE, "/api/workers/**").hasRole("ADMIN")
 
+                        // 디바이스 상태 갱신과 생체 기록 수집은 사람이 아니라 게이트웨이가 부른다.
+                        // 지금은 관리자 토큰으로 열어두고, API Key 인증 트랙이 생기면 그쪽으로 옮긴다.
+                        // 이 두 줄은 아래 ADMIN 규칙보다 먼저 와야 한다. (먼저 매칭되는 규칙이 이긴다)
+                        .requestMatchers(HttpMethod.PATCH, "/api/wearable-devices/*/status").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/vital-records").authenticated()
+
+                        // 디바이스는 자산 관리 성격이라 등록·수정·폐기를 ADMIN 으로 제한한다.
+                        .requestMatchers(HttpMethod.POST, "/api/wearable-devices").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/wearable-devices/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/wearable-devices/**").hasRole("ADMIN")
+
+                        // 생체 기록 삭제는 이력 훼손이라 ADMIN 만.
+                        .requestMatchers(HttpMethod.DELETE, "/api/vital-records/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated())
 
                 .oauth2ResourceServer(oauth2 -> oauth2
