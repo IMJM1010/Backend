@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📗 API 명세서 (Notion)
+    url: https://app.notion.com/p/3cd2c89ec2fc8182be7cf312d1ca22ce
+    about: 엔드포인트, 개발 상황, 담당자를 확인하고 갱신합니다.
+  - name: 🗂 ERD (ERDCloud)
+    url: https://www.erdcloud.com/d/NCF6XaSXn87sts3oW
+    about: 테이블 구조와 컬럼 정의를 확인합니다.
