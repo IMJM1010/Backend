@@ -6,15 +6,14 @@ import com.example.be.domain.manager.dto.request.PasswordChangeRequest;
 import com.example.be.domain.manager.entity.Manager;
 import com.example.be.domain.manager.entity.ManagerRole;
 import com.example.be.domain.manager.repository.ManagerRepository;
+import com.example.be.global.common.PageableUtils;
 import com.example.be.global.exception.BusinessException;
 import com.example.be.global.exception.ErrorCode;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -77,7 +76,7 @@ public class ManagerService {
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        return managerRepository.findAll(spec, withDefaultSort(pageable));
+        return managerRepository.findAll(spec, PageableUtils.withLatestFirst(pageable));
     }
 
     /* ---------- 생성 / 수정 ---------- */
@@ -198,12 +197,4 @@ public class ManagerService {
         throw new BusinessException(ErrorCode.ACCESS_DENIED);
     }
 
-    /** 클라이언트가 sort 를 안 보내면 최신 등록 순으로 고정한다. 페이지마다 순서가 흔들리지 않도록. */
-    private Pageable withDefaultSort(Pageable pageable) {
-        if (pageable.getSort().isSorted()) {
-            return pageable;
-        }
-        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "createdAt"));
-    }
 }
