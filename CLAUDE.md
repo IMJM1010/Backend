@@ -59,6 +59,19 @@
 ```
 
 ### 현재 상태 (2026-08-31)
+- **4단계 진행 중.** 웨어러블 디바이스 + 생체 기록 완료. 다음은 환경 센서 + 환경 기록.
+  - **시계열 테이블 취급 원칙** (`vital_records`, 앞으로 `env_records` 도 동일)
+    - 목록 조회에 `from`, `to` 를 **필수**로 강제하고 최대 기간을 7일로 제한한다.
+      기간 없는 조회를 허용하면 프론트 실수 한 번으로 서버가 멈춘다.
+    - `(device_id, measured_at)` 복합 인덱스를 엔티티 `@Index` 로 선언한다. 조회는 이 인덱스를 타야 한다.
+    - `/realtime` 은 반드시 `PageRequest.of(0, 1)` 로 1건만 가져온다. 전체 정렬 후 첫 건 선택 금지.
+    - `measured_at`(측정 시각)과 `created_at`(서버 수신 시각)은 다르다. 조회 기준은 항상 `measured_at`.
+    - 센서 오류값(심박수 500, 미래 시각 등)은 저장 전에 걸러낸다. 저장되면 알림 판정이 오작동한다.
+  - `wearable_devices` 에 `serial_no` 유니크 제약, `connection_status` 에 `RETIRED` 값을 추가했다. (ERD 확장)
+  - 디바이스 삭제는 `RETIRED` 상태 처리. 생체 기록 수만 건이 `device_id` 로 참조하고 있다.
+  - 한 작업자가 같은 종류(`device_type`)의 디바이스를 둘 이상 착용할 수 없다.
+  - 게이트웨이가 호출하는 두 엔드포인트(`PATCH /wearable-devices/{id}/status`, `POST /vital-records`)는
+    SecurityConfig 에서 ADMIN 규칙보다 **먼저** 선언해야 한다. 먼저 매칭되는 규칙이 이긴다.
 - **3단계 완료.** 공정(Processes) + 구역(Zones) + 작업자(Workers). 다음은 4단계(수집 계층).
   - `workers` 에 `employee_no` 유니크 제약을 걸었다. ERD 에는 없는 제약이다.
     사번이 중복되면 근태·생체 기록이 누구 것인지 구분되지 않는다.

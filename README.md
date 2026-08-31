@@ -294,7 +294,7 @@ managers ──1:N── dashboard_widgets
 | `workers.safety_status` | `NORMAL` / `CAUTION` / `DANGER` / `EMERGENCY` |
 | `workers.employee_no` | 사번. 유니크 제약 추가 (ERD 확장) |
 | `wearable_devices.device_type` | `BAND` / `HELMET` / `TAG` |
-| `wearable_devices.connection_status` | `CONNECTED` / `DISCONNECTED` / `ERROR` |
+| `wearable_devices.connection_status` | `CONNECTED` / `DISCONNECTED` / `ERROR` / `RETIRED`(폐기·분실, ERD 확장) |
 | `env_sensors.sensor_type` | `TEMPERATURE` / `HUMIDITY` / `FINE_DUST` / `OXYGEN` / `CHEMICAL` / `NOISE` |
 | `alerts.level` | `EMERGENCY` / `DANGER` / `NOTICE` |
 | `alerts.alert_type` | `HEAT_RISK` / `COLLISION` / `JOINT_CARE` / `FALL` / `HEART_RATE_ANOMALY` / `STAMINA_CARE` / `RESOLVED` |
