@@ -3,6 +3,8 @@ package com.example.be.domain.zone.controller;
 import com.example.be.domain.zone.dto.request.ZoneCreateRequest;
 import com.example.be.domain.zone.dto.request.ZoneUpdateRequest;
 import com.example.be.domain.zone.dto.response.ZoneResponse;
+import com.example.be.domain.worker.dto.response.WorkerResponse;
+import com.example.be.domain.worker.service.WorkerService;
 import com.example.be.domain.zone.service.ZoneService;
 import com.example.be.global.common.ApiResponse;
 import com.example.be.global.common.PageResponse;
@@ -36,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ZoneController {
 
     private final ZoneService zoneService;
+    private final WorkerService workerService;
 
     @Operation(summary = "구역 목록 조회", description = "processId 로 필터링할 수 있다. 기본 정렬은 구역 코드 오름차순.")
     @GetMapping
@@ -74,7 +77,17 @@ public class ZoneController {
                 ZoneResponse.from(zoneService.update(zoneId, request))));
     }
 
-    @Operation(summary = "구역 삭제", description = "ADMIN 전용.")
+    @Operation(summary = "구역 내 작업자 목록 조회", description = "현재 해당 구역에 배정된 작업자를 조회한다.")
+    @GetMapping("/{zoneId}/workers")
+    public ResponseEntity<ApiResponse<PageResponse<WorkerResponse>>> getWorkersByZone(
+            @PathVariable Long zoneId, Pageable pageable) {
+
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(
+                workerService.getWorkersByZoneId(zoneId, pageable), WorkerResponse::from)));
+    }
+
+    @Operation(summary = "구역 삭제",
+            description = "재직 중인 작업자가 남아 있으면 409 를 반환한다. ADMIN 전용.")
     @DeleteMapping("/{zoneId}")
     public ResponseEntity<Void> deleteZone(@PathVariable Long zoneId) {
         zoneService.delete(zoneId);

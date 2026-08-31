@@ -59,7 +59,15 @@
 ```
 
 ### 현재 상태 (2026-08-31)
-- **3단계 진행 중.** 공정(Processes) + 구역(Zones) 완료. 다음은 작업자(Workers).
+- **3단계 완료.** 공정(Processes) + 구역(Zones) + 작업자(Workers). 다음은 4단계(수집 계층).
+  - `workers` 에 `employee_no` 유니크 제약을 걸었다. ERD 에는 없는 제약이다.
+    사번이 중복되면 근태·생체 기록이 누구 것인지 구분되지 않는다.
+  - 작업자 퇴사 처리는 `is_active = false` + **구역에서도 제외**한다.
+    퇴사자가 구역별 인원 현황에 계속 잡히면 안 되기 때문이다.
+  - 퇴사자에 대한 변경 요청(수정·구역이동·안전상태)은 400(`WORKER_NOT_ACTIVE`)으로 막는다.
+  - 구역 삭제는 재직 작업자가 있으면 409(`ZONE_HAS_WORKERS`).
+  - `PATCH /api/workers/{id}/safety-status` 는 실제로는 디바이스·판정 배치가 호출할 엔드포인트다.
+    지금은 관리자 JWT 로만 열려 있고, API Key 인증 트랙이 생기면 그쪽으로 옮긴다.
   - `Process` 클래스명이 `java.lang.Process` 와 겹친다. 다른 패키지에서 쓸 때
     `com.example.be.domain.process.entity.Process` 를 import 했는지 반드시 확인할 것.
   - `zones` 에 `(process_id, zone_code)` 유니크 제약을 걸었다. ERD 에는 없는 제약이다.
@@ -68,8 +76,9 @@
   - **서비스 의존 방향은 구역 → 공정 한 방향만.** 공정 쪽에서 구역 수가 필요한 경우는
     `ProcessRepository` 의 JPQL(`countZonesOf`)로 해결해 순환 의존을 만들지 않는다.
     앞으로 도메인을 추가할 때도 이 원칙을 지킬 것: **부모가 자식 서비스를 참조하지 않는다.**
-  - 미구현으로 남긴 하위 리소스: `/processes/{id}/ai-insights`, `/zones/{id}/workers`,
-    `/zones/{id}/env-sensors`, `/zones/{id}/alerts` — 각 도메인이 생긴 뒤에 붙인다.
+  - 미구현으로 남긴 하위 리소스: `/processes/{id}/ai-insights`, `/zones/{id}/env-sensors`,
+    `/zones/{id}/alerts`, `/workers/{id}/attendances`, `/workers/{id}/wearable-devices`,
+    `/workers/{id}/alerts` — 각 도메인이 생긴 뒤에 붙인다.
 - **2단계 인증 완료.** Manager 도메인 + JWT 인증 + Auth API 4종 + Managers CRUD 7종. 다음은 3단계(공정/구역/작업자).
   - JWT 는 **Spring Security 리소스 서버**(`spring-boot-starter-security-oauth2-resource-server`, Nimbus)를 쓴다.
     jjwt 가 아니다. 토큰 검증은 커스텀 필터가 아니라 `BearerTokenAuthenticationFilter` 가 처리한다.
@@ -214,6 +223,12 @@ domain/worker/
 - 인가 검사는 두 군데로 나뉜다. 새 API 를 만들 때 어느 쪽인지 판단할 것.
   - **URL 과 메서드만으로 판단되는 규칙** → `SecurityConfig` (예: `POST /api/managers` 는 ADMIN)
   - **대상 리소스를 조회해야 판단되는 규칙** → Service (예: "본인 또는 ADMIN")
+- 도메인별 쓰기 권한 정리
+  | 대상 | 등록 · 수정 | 삭제 |
+  |---|---|---|
+  | 관리자 | 본인 또는 ADMIN | ADMIN |
+  | 공정 · 구역 (현장 구조 마스터) | ADMIN | ADMIN |
+  | 작업자 (일상 인력 배치) | 모든 관리자 | ADMIN (퇴사 처리) |
 - 권한 상승 방지: `role` 변경은 ADMIN 만 가능하고, **본인 권한은 누구도 스스로 바꿀 수 없다.**
   이 두 가지가 함께 있어야 MANAGER 의 자기 승격과 ADMIN 의 실수로 인한 자기 강등을 모두 막는다.
 - 비밀번호 변경은 **본인만** 가능하다. ADMIN 도 남의 현재 비밀번호를 모르기 때문이다.
