@@ -49,4 +49,11 @@ dependencyManagement {
 
 tasks.named('test') {
     useJUnitPlatform()
+    // 모든 테스트는 test 프로파일(H2 인메모리)로 실행한다.
+    // 각 테스트 클래스에 @ActiveProfiles("test") 를 붙이지 않아도 되도록 여기서 강제한다.
+    systemProperty 'spring.profiles.active', 'test'
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat 'full'
+    }
 }

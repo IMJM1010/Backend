@@ -40,6 +40,16 @@
 > Spring Boot 4 부터 web starter 이름이 `spring-boot-starter-webmvc` 로, 테스트 starter가 모듈별
 > (`spring-boot-starter-data-jpa-test` 등)로 분리되었다. 3.x 기준 코드/설정을 그대로 가져오지 말 것.
 
+**Boot 4 로 오면서 달라진 것 중 이미 걸렸던 것들**
+- **Jackson 3 사용** (`tools.jackson.*`, 기존 `com.fasterxml.jackson.*` 아님).
+  `SerializationFeature.WRITE_DATES_AS_TIMESTAMPS` 가 제거되어
+  `spring.jackson.serialization.write-dates-as-timestamps` 를 쓰면 **기동 실패**한다.
+  Jackson 3 는 java.time 을 기본으로 ISO-8601 문자열로 직렬화하므로 설정 자체가 불필요하다.
+- `@SpringBootTest` 가 MockMvc / WebTestClient / TestRestTemplate 을 자동 제공하지 않는다.
+  컨트롤러 테스트에는 `@AutoConfigureMockMvc` 를 명시할 것.
+- 설정 프로퍼티를 3.x 블로그 글에서 복사해 오지 말고, 의심되면
+  [Boot 4.1 API 문서](https://docs.spring.io/spring-boot/4.1/api/java/)에서 해당 Properties 클래스를 먼저 확인할 것.
+
 ### 빌드 / 실행
 ```bash
 ./gradlew build          # 전체 빌드 + 테스트
@@ -49,9 +59,16 @@
 ```
 
 ### 현재 상태 (2026-08-31)
-- Spring Initializr 스켈레톤만 존재. `BeApplication.java` 외 구현 코드 없음.
-- `application.properties` 에 `spring.application.name=BE` 뿐 — **datasource 설정 필요**.
-- 커밋 이력 없음 (`master` 브랜치, initial commit 전).
+- **1단계 기반 세팅 완료.** `global/` 패키지에 공통 응답·예외·설정·엔티티 베이스가 들어가 있다.
+  - `global/common` — `ApiResponse`, `PageResponse`
+  - `global/exception` — `ErrorCode`, `BusinessException`, `ValidationError`, `GlobalExceptionHandler`
+  - `global/entity` — `BaseTimeEntity`, `BaseCreatedEntity`
+  - `global/config` — `JpaConfig`, `SecurityConfig`(임시 permitAll), `CorsConfig`, `SwaggerConfig`
+- 도메인 구현체는 아직 없음. 다음은 2단계(인증).
+- 실행 프로파일은 `local` 이 기본. DB 접속 정보는 `application-local.properties`(gitignore 대상)에 각자 작성.
+- 테스트는 Gradle 이 `test` 프로파일을 강제하여 인메모리 H2 로 실행된다.
+  테스트 클래스에 `@ActiveProfiles` 를 따로 붙이지 않아도 된다.
+- **`SecurityConfig` 는 전체 허용 상태다.** 2단계에서 JWT 필터와 인가 규칙으로 교체할 것.
 
 ### 착수 전 정리가 필요한 의존성 이슈
 - `spring-ai-starter-vector-store-s3` 가 들어 있으나 AI 인사이트 생성에는 **채팅 모델 starter**
@@ -70,11 +87,12 @@ com.example.be
 ├── BeApplication.java
 ├── global/                      # 도메인 공통 (횡단 관심사)
 │   ├── common/
-│   │   ├── ApiResponse.java     # { success, data, message }
+│   │   ├── ApiResponse.java     # { success, data, message, code }
 │   │   └── PageResponse.java    # 페이징 응답 래퍼
 │   ├── config/                  # SecurityConfig, SwaggerConfig, JpaConfig, CorsConfig
 │   ├── entity/
-│   │   └── BaseTimeEntity.java  # created_at / updated_at (Auditing)
+│   │   ├── BaseTimeEntity.java     # created_at + updated_at (마스터성 테이블)
+│   │   └── BaseCreatedEntity.java  # created_at 만 (로그성 테이블)
 │   ├── exception/               # BusinessException, ErrorCode, GlobalExceptionHandler
 │   └── security/                # JwtTokenProvider, JwtAuthenticationFilter, CustomUserDetails
 └── domain/
@@ -126,12 +144,16 @@ domain/worker/
 - 응답 포맷:
 
 ```json
-{ "success": true, "data": { }, "message": null }
+{ "success": true, "data": { }, "message": null, "code": null }
 ```
 ```json
-{ "success": false, "data": null, "message": "존재하지 않는 작업자입니다." }
+{ "success": false, "data": null, "message": "존재하지 않는 작업자입니다.", "code": "WORKER_NOT_FOUND" }
 ```
 
+- `code` 는 에러 식별용이며 `ErrorCode` enum 상수 이름이 그대로 내려간다. 프론트가 이 값으로 분기하므로
+  **이미 배포된 상수의 이름을 바꾸면 프론트가 깨진다.** 이름 변경 대신 새 상수를 추가할 것.
+- 검증 실패(400)는 `data` 에 필드별 상세를 담아 내려준다:
+  `[{ "field": "employeeNo", "rejectedValue": null, "reason": "사번은 필수입니다." }]`
 - 목록 조회 공통 파라미터: `page`(0-base), `size`(기본 20), `sort`(예: `createdAt,desc`)
 - HTTP 상태 코드
   | 상황 | 코드 |
