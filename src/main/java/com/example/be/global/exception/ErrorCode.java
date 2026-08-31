@@ -38,6 +38,11 @@ public enum ErrorCode {
     MANAGER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 관리자입니다."),
     DUPLICATE_LOGIN_ID(HttpStatus.CONFLICT, "이미 사용 중인 로그인 아이디입니다."),
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다."),
+    SAME_AS_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "현재 비밀번호와 다른 비밀번호를 입력해 주세요."),
+    MANAGER_DEACTIVATED(HttpStatus.UNAUTHORIZED, "비활성화된 계정입니다. 관리자에게 문의해 주세요."),
+    MANAGER_ALREADY_DEACTIVATED(HttpStatus.CONFLICT, "이미 비활성화된 관리자입니다."),
+    CANNOT_DEACTIVATE_SELF(HttpStatus.BAD_REQUEST, "본인 계정은 비활성화할 수 없습니다."),
+    CANNOT_CHANGE_OWN_ROLE(HttpStatus.FORBIDDEN, "본인의 권한은 변경할 수 없습니다."),
 
     /* ---------- 공정 ---------- */
     PROCESS_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 공정입니다."),

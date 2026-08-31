@@ -289,6 +289,7 @@ managers ──1:N── dashboard_widgets
 | 대상 | 값 |
 |---|---|
 | `managers.role` | `ADMIN` / `MANAGER` |
+| `managers.is_active` | 재직 여부. 삭제 대신 비활성 처리 (ERD 확장 컬럼) |
 | `processes.status` | `RUNNING` / `STOPPED` |
 | `workers.safety_status` | `NORMAL` / `CAUTION` / `DANGER` / `EMERGENCY` |
 | `wearable_devices.device_type` | `BAND` / `HELMET` / `TAG` |

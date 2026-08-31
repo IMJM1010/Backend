@@ -45,6 +45,12 @@ public class AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
+        // 비밀번호 확인 이후에 검사한다. 먼저 검사하면 비밀번호를 몰라도
+        // "비활성 계정" 응답만으로 해당 아이디가 존재한다는 사실이 드러난다.
+        if (!manager.isActive()) {
+            throw new BusinessException(ErrorCode.MANAGER_DEACTIVATED);
+        }
+
         return issueTokens(manager);
     }
 
@@ -84,6 +90,10 @@ public class AuthService {
         Manager manager = managerService.getById(managerId);
         if (!manager.matchesRefreshToken(refreshToken)) {
             throw new BusinessException(ErrorCode.REFRESH_TOKEN_MISMATCH);
+        }
+        // 토큰 발급 후에 비활성화됐을 수 있다. 재발급 시점에 다시 확인한다.
+        if (!manager.isActive()) {
+            throw new BusinessException(ErrorCode.MANAGER_DEACTIVATED);
         }
 
         return issueTokens(manager);

@@ -1,3 +1,20 @@
+# 저장소에는 항상 LF 로 저장하고, 체크아웃할 때도 LF 를 유지한다.
+# 이 규칙이 없으면 Windows git 이 체크아웃 시 CRLF 로 바꿔버려서
+# 내용을 건드리지 않은 파일까지 "전체 줄 변경" 으로 잡힌다.
+* text=auto eol=lf
+
+# gradlew 는 Unix 셸 스크립트라 반드시 LF.
 /gradlew text eol=lf
+
+# Windows 배치 파일은 CRLF 여야 한다.
 *.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 바이너리는 변환하지 않는다.
 *.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary

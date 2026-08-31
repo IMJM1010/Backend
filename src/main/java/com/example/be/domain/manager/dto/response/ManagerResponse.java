@@ -14,6 +14,7 @@ public record ManagerResponse(
         String name,
         ManagerRole role,
         String profileImageUrl,
+        boolean isActive,
         LocalDateTime createdAt
 ) {
 
@@ -24,6 +25,7 @@ public record ManagerResponse(
                 manager.getName(),
                 manager.getRole(),
                 manager.getProfileImageUrl(),
+                manager.isActive(),
                 manager.getCreatedAt()
         );
     }

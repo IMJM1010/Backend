@@ -59,11 +59,16 @@
 ```
 
 ### 현재 상태 (2026-08-31)
-- **2단계 인증 진행 중.** Manager 도메인 + JWT 인증 + Auth API 4종 완료. Managers CRUD 는 다음 PR.
+- **2단계 인증 완료.** Manager 도메인 + JWT 인증 + Auth API 4종 + Managers CRUD 7종. 다음은 3단계(공정/구역/작업자).
   - JWT 는 **Spring Security 리소스 서버**(`spring-boot-starter-security-oauth2-resource-server`, Nimbus)를 쓴다.
     jjwt 가 아니다. 토큰 검증은 커스텀 필터가 아니라 `BearerTokenAuthenticationFilter` 가 처리한다.
   - 인증된 관리자 식별자는 `SecurityUtils.getCurrentManagerId()` 로 꺼낸다.
-  - `managers` 에 ERD 에 없는 `refresh_token`, `refresh_token_expires_at` 컬럼을 추가했다. **ERDCloud 반영 필요.**
+  - `managers` 에 ERD 에 없는 컬럼 3개를 추가했다. **ERDCloud 반영 필요.**
+    `refresh_token VARCHAR(500) NULL`, `refresh_token_expires_at DATETIME NULL`,
+    `is_active BOOLEAN NOT NULL DEFAULT TRUE`
+  - 관리자 삭제는 하드 삭제가 아니라 `is_active = false`. 사고 처리자(handled_by), 알림 확인자(confirmed_by),
+    긴급조치 실행자로 이름이 남아 있어 실제로 지우면 이력이 깨진다.
+  - 프로필 이미지는 파일 업로드가 아니라 **URL 문자열만 받는다.** S3 로 바꿔도 API 계약은 유지된다.
   - 로컬에서는 `LocalDataInitializer` 가 `admin` / `admin1234!` ADMIN 계정을 자동 생성한다 (local 프로파일 전용).
 - **1단계 기반 세팅 완료.** `global/` 패키지에 공통 응답·예외·설정·엔티티 베이스가 들어가 있다.
   - `global/common` — `ApiResponse`, `PageResponse`
@@ -194,7 +199,15 @@ domain/worker/
 - `role` 은 `ADMIN` / `MANAGER` 두 가지.
   - `ADMIN`: 관리자 등록/삭제, 권한 변경, 공정·구역·센서 마스터 데이터 변경
   - `MANAGER`: 조회 전반, 알림 확인, 사고 접수/처리, 긴급조치 실행, 본인 위젯 설정
-- 본인 리소스(`/api/managers/{id}`, `/api/managers/{id}/password`, 위젯 설정)는 **본인 또는 ADMIN** 만 접근.
+- 본인 리소스(`/api/managers/{id}`, 위젯 설정)는 **본인 또는 ADMIN** 만 접근.
+- 인가 검사는 두 군데로 나뉜다. 새 API 를 만들 때 어느 쪽인지 판단할 것.
+  - **URL 과 메서드만으로 판단되는 규칙** → `SecurityConfig` (예: `POST /api/managers` 는 ADMIN)
+  - **대상 리소스를 조회해야 판단되는 규칙** → Service (예: "본인 또는 ADMIN")
+- 권한 상승 방지: `role` 변경은 ADMIN 만 가능하고, **본인 권한은 누구도 스스로 바꿀 수 없다.**
+  이 두 가지가 함께 있어야 MANAGER 의 자기 승격과 ADMIN 의 실수로 인한 자기 강등을 모두 막는다.
+- 비밀번호 변경은 **본인만** 가능하다. ADMIN 도 남의 현재 비밀번호를 모르기 때문이다.
+  관리자가 타인 비밀번호를 초기화해야 한다면 별도의 초기화 API 를 만들 것.
+- 비밀번호 변경·계정 비활성화 시 저장된 refresh token 을 지워 기존 세션을 끊는다.
 - 인증 없이 접근 가능: `/api/auth/login`, `/api/auth/refresh`, `/swagger-ui/**`, `/v3/api-docs/**`
 - **디바이스/센서 수집 API**(`POST /api/vital-records`, `POST /api/env-records`)는 사람이 아닌
   게이트웨이가 호출한다. JWT가 아닌 **API Key 인증 트랙**으로 분리하는 것을 전제로 설계할 것.
