@@ -59,6 +59,17 @@
 ```
 
 ### 현재 상태 (2026-08-31)
+- **3단계 진행 중.** 공정(Processes) + 구역(Zones) 완료. 다음은 작업자(Workers).
+  - `Process` 클래스명이 `java.lang.Process` 와 겹친다. 다른 패키지에서 쓸 때
+    `com.example.be.domain.process.entity.Process` 를 import 했는지 반드시 확인할 것.
+  - `zones` 에 `(process_id, zone_code)` 유니크 제약을 걸었다. ERD 에는 없는 제약이다.
+    같은 공정 안에서 "A-1 구역"이 하나로 특정되어야 하기 때문이며, 다른 공정끼리는 코드가 겹쳐도 된다.
+  - 공정 삭제는 하위 구역이 있으면 409. 구역이 사라지면 그에 매인 작업자·센서·알림·사고가 고아가 된다.
+  - **서비스 의존 방향은 구역 → 공정 한 방향만.** 공정 쪽에서 구역 수가 필요한 경우는
+    `ProcessRepository` 의 JPQL(`countZonesOf`)로 해결해 순환 의존을 만들지 않는다.
+    앞으로 도메인을 추가할 때도 이 원칙을 지킬 것: **부모가 자식 서비스를 참조하지 않는다.**
+  - 미구현으로 남긴 하위 리소스: `/processes/{id}/ai-insights`, `/zones/{id}/workers`,
+    `/zones/{id}/env-sensors`, `/zones/{id}/alerts` — 각 도메인이 생긴 뒤에 붙인다.
 - **2단계 인증 완료.** Manager 도메인 + JWT 인증 + Auth API 4종 + Managers CRUD 7종. 다음은 3단계(공정/구역/작업자).
   - JWT 는 **Spring Security 리소스 서버**(`spring-boot-starter-security-oauth2-resource-server`, Nimbus)를 쓴다.
     jjwt 가 아니다. 토큰 검증은 커스텀 필터가 아니라 `BearerTokenAuthenticationFilter` 가 처리한다.

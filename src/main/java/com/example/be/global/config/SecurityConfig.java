@@ -64,6 +64,13 @@ public class SecurityConfig {
                         // 나머지 관리자 API 는 "본인 또는 ADMIN" 규칙이라 서비스 계층에서 검사한다.
                         .requestMatchers(HttpMethod.POST, "/api/managers").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/managers/**").hasRole("ADMIN")
+
+                        // 공정·구역은 현장 구조를 정의하는 마스터 데이터다.
+                        // 조회는 모든 관리자가, 변경은 ADMIN 만 할 수 있다.
+                        .requestMatchers(HttpMethod.POST, "/api/processes", "/api/zones").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/processes/**", "/api/zones/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/processes/**", "/api/zones/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated())
 
                 .oauth2ResourceServer(oauth2 -> oauth2
