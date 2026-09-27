@@ -45,6 +45,8 @@ src/main/resources/application-prod.properties
 src/main/resources/application-prod.yml
 src/main/resources/application-secret.properties
 src/main/resources/application-secret.yml
+src/main/resources/application-supabase.properties
+src/main/resources/application-supabase.yml
 .env
 .env.*
 *.pem
