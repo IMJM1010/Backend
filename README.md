@@ -75,7 +75,7 @@
 | **Language** | Java 21 |
 | **Framework** | Spring Boot 4.1.1 |
 | **Build** | Gradle 9.7.1 (Groovy DSL) |
-| **Database** | MySQL |
+| **Database** | MySQL (로컬 개발) / PostgreSQL (Supabase, `supabase` 프로파일) |
 | **ORM** | Spring Data JPA (Hibernate) |
 | **Security** | Spring Security, JWT |
 | **Validation** | Jakarta Bean Validation |
@@ -158,6 +158,32 @@ jwt.refresh-token-validity=1209600000
 ./gradlew test       # 테스트만 실행
 ./gradlew clean      # 빌드 산출물 정리
 ```
+
+### 5. Supabase(PostgreSQL)로 실행
+
+공용 개발 DB 는 Supabase(PostgreSQL)에 둔다. 로컬 MySQL 설정은 그대로 두고 `supabase` 프로파일로 전환한다.
+
+1. Supabase SQL Editor 에서 스키마를 만든다. **`public` 이 아닌 `safety` 스키마를 쓴다.**
+   `public` 은 Supabase Data API 로 자동 공개되어 anon key 로 테이블을 읽을 수 있기 때문이다.
+   ```sql
+   CREATE SCHEMA IF NOT EXISTS safety;
+   ```
+2. 설정 파일을 복사하고, 대시보드 상단 **Connect → Session pooler** 의 호스트·사용자·비밀번호를 채운다.
+   ```powershell
+   cd src\main\resources
+   copy application-supabase.properties.example application-supabase.properties
+   ```
+   Direct connection 은 IPv6 전용이고, Transaction pooler(6543)는 prepared statement 를 지원하지 않아 Hibernate 와 맞지 않는다.
+3. 실행하면 `ddl-auto=update` 로 `safety` 스키마에 테이블이 만들어진다.
+   ```bash
+   ./gradlew bootRun --args='--spring.profiles.active=supabase'
+   ```
+4. **첫 관리자 계정.** 기본 관리자 자동 생성(`LocalDataInitializer`)은 `local` 프로파일 전용이다.
+   처음 한 번만 두 프로파일을 함께 켜서 계정을 만든 뒤 **바로 비밀번호를 바꾼다.** (뒤에 오는 `supabase` 의 접속 설정이 이긴다)
+   ```bash
+   ./gradlew bootRun --args='--spring.profiles.active=local,supabase'
+   # PATCH /api/managers/{id}/password 로 admin1234! 를 변경
+   ```
 
 ---
 

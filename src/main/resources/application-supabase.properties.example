@@ -1,0 +1,41 @@
+# ===================================================================
+# Supabase(PostgreSQL) 접속 설정 템플릿
+#
+# 이 파일을 같은 위치에 application-supabase.properties 로 복사한 뒤 값을 채우세요.
+# (복사본은 .gitignore 대상이라 커밋되지 않습니다)
+#
+#   Windows : copy application-supabase.properties.example application-supabase.properties
+#   macOS   : cp application-supabase.properties.example application-supabase.properties
+#
+# 실행: ./gradlew bootRun --args='--spring.profiles.active=supabase'
+#
+# 접속 정보 위치: Supabase 대시보드 → 상단 Connect → Session pooler
+#   - Direct connection(db.<ref>.supabase.co)은 IPv6 전용이라 대부분의 가정·학교망에서 붙지 않는다.
+#   - Transaction pooler(6543)는 prepared statement 를 지원하지 않아 Hibernate 와 맞지 않는다.
+#   → Session pooler(5432) 를 쓴다. 사용자 이름이 postgres.<project-ref> 형태다.
+#
+# 사전 준비 - Supabase SQL Editor 에서 스키마 생성:
+#   CREATE SCHEMA IF NOT EXISTS safety;
+#
+# 테이블을 public 이 아니라 safety 스키마에 두는 이유:
+#   Supabase 는 public 스키마를 Data API(PostgREST)로 자동 공개한다. 관리자 비밀번호 해시와
+#   refresh token 이 있는 managers 테이블이 anon key 로 조회되지 않도록, 공개되지 않는 스키마를 쓴다.
+# ===================================================================
+
+# ---------- DataSource ----------
+spring.datasource.url=jdbc:postgresql://CHANGE_ME.pooler.supabase.com:5432/postgres?currentSchema=safety&sslmode=require
+spring.datasource.username=postgres.CHANGE_ME_PROJECT_REF
+spring.datasource.password=CHANGE_ME
+spring.datasource.driver-class-name=org.postgresql.Driver
+# Session pooler 는 클라이언트 연결 수에 상한이 있다. 팀원 여러 명이 동시에 띄우므로 작게 잡는다.
+spring.datasource.hikari.maximum-pool-size=5
+
+# ---------- JPA ----------
+spring.jpa.properties.hibernate.default_schema=safety
+# 개발 초기에는 update, 스키마가 굳으면 validate 로 바꾸는 것을 권장한다.
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+
+# ---------- JWT ----------
+#   openssl rand -base64 48
+jwt.secret=CHANGE_ME_TO_A_RANDOM_STRING_AT_LEAST_32_BYTES_LONG

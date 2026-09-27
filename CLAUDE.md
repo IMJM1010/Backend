@@ -29,7 +29,7 @@
 | Language | Java 21 |
 | Framework | Spring Boot 4.1.1 |
 | Build | Gradle 9.7.1 (Groovy DSL, `./gradlew`) |
-| DB | MySQL (`com.mysql:mysql-connector-j`) |
+| DB | MySQL (`com.mysql:mysql-connector-j`, 로컬) / PostgreSQL (`org.postgresql:postgresql`, Supabase `supabase` 프로파일, `safety` 스키마) |
 | ORM | Spring Data JPA |
 | Security | Spring Security + JWT |
 | Validation | Spring Boot Starter Validation |
