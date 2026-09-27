@@ -162,28 +162,41 @@ jwt.refresh-token-validity=1209600000
 ### 5. Supabase(PostgreSQL)로 실행
 
 공용 개발 DB 는 Supabase(PostgreSQL)에 둔다. 로컬 MySQL 설정은 그대로 두고 `supabase` 프로파일로 전환한다.
+테이블은 **`public` 이 아닌 `safety` 스키마**에 있다. `public` 은 Supabase Data API 로 자동 공개되어
+anon key 로 테이블을 읽을 수 있기 때문이다.
 
-1. Supabase SQL Editor 에서 스키마를 만든다. **`public` 이 아닌 `safety` 스키마를 쓴다.**
-   `public` 은 Supabase Data API 로 자동 공개되어 anon key 로 테이블을 읽을 수 있기 때문이다.
-   ```sql
-   CREATE SCHEMA IF NOT EXISTS safety;
-   ```
-2. 설정 파일을 복사하고, 대시보드 상단 **Connect → Session pooler** 의 호스트·사용자·비밀번호를 채운다.
+1. 설정 파일을 복사하고, 대시보드 상단 **Connect → Direct → Session pooler** 의 호스트·사용자·비밀번호를 채운다.
    ```powershell
    cd src\main\resources
    copy application-supabase.properties.example application-supabase.properties
    ```
    Direct connection 은 IPv6 전용이고, Transaction pooler(6543)는 prepared statement 를 지원하지 않아 Hibernate 와 맞지 않는다.
-3. 실행하면 `ddl-auto=update` 로 `safety` 스키마에 테이블이 만들어진다.
+2. 실행한다. `ddl-auto=validate` 라 앱은 테이블을 만들거나 바꾸지 않고, 엔티티와 맞는지만 확인한다.
    ```bash
    ./gradlew bootRun --args='--spring.profiles.active=supabase'
    ```
-4. **첫 관리자 계정.** 기본 관리자 자동 생성(`LocalDataInitializer`)은 `local` 프로파일 전용이다.
-   처음 한 번만 두 프로파일을 함께 켜서 계정을 만든 뒤 **바로 비밀번호를 바꾼다.** (뒤에 오는 `supabase` 의 접속 설정이 이긴다)
+3. **첫 관리자 계정** (DB 에 관리자가 하나도 없을 때만). 기본 관리자 자동 생성(`LocalDataInitializer`)은 `local` 프로파일 전용이다.
+   한 번만 두 프로파일을 함께 켜서 계정을 만든 뒤 **바로 비밀번호를 바꾼다.** (뒤에 오는 `supabase` 의 접속 설정이 이긴다)
    ```bash
    ./gradlew bootRun --args='--spring.profiles.active=local,supabase'
    # PATCH /api/managers/{id}/password 로 admin1234! 를 변경
    ```
+
+### 6. 스키마 변경 방법 (Supabase)
+
+Supabase 스키마는 **`supabase/migrations/` 의 SQL 파일로만** 바꾼다. 이 저장소는 Supabase GitHub 연동에 연결되어 있어서,
+`develop` 에 머지되면 새 마이그레이션이 Supabase 에 자동 적용된다. 대시보드 SQL Editor 에서 직접 바꾸면 기록이 어긋난다.
+
+1. 엔티티를 바꾸는 PR 에 마이그레이션 파일을 같이 넣는다. 파일 이름은 `<UTC 타임스탬프>_<설명>.sql` 이다.
+   ```bash
+   supabase migration new add_env_sensors   # Supabase CLI 가 있으면
+   # 없으면 직접 생성: supabase/migrations/20261001120000_add_env_sensors.sql
+   ```
+2. SQL 은 `safety` 스키마를 명시해서 쓴다. (`CREATE TABLE safety.env_sensors ...`)
+   Hibernate 가 만들 DDL 이 궁금하면 로컬 PostgreSQL 에 `ddl-auto=update` 로 한 번 띄워 `pg_dump -s` 로 확인한다.
+3. PR 에서 Supabase 체크가 통과하는지 보고 머지한다. 머지 후 `supabase` 프로파일로 앱이 뜨면(validate 통과) 끝이다.
+
+이미 적용된 마이그레이션 파일은 **고치지 않는다.** 바꿀 게 있으면 새 파일을 추가한다.
 
 ---
 
