@@ -116,6 +116,14 @@
 - 디바이스/센서 수집 API(`POST /api/vital-records`, `/api/env-records`)는 아직 일반 JWT 인증 대상이다.
   API Key 트랙 분리는 4단계에서.
 
+### Supabase 스키마 관리 (supabase 프로파일)
+- 공용 개발 DB 는 Supabase 의 `safety` 스키마다. 스키마는 **`supabase/migrations/*.sql` 로만** 바꾼다.
+  저장소가 Supabase GitHub 연동에 연결되어 있어 `develop` 머지 시 자동 적용된다.
+- `supabase` 프로파일은 `ddl-auto=validate` 다. **엔티티를 추가·변경하는 PR 에는 같은 PR 에 마이그레이션 파일을 넣는다.**
+  빠지면 머지 후 앱이 Schema validation 오류로 기동하지 않는다.
+- 적용된 마이그레이션 파일은 수정하지 않는다. 새 타임스탬프 파일을 추가한다.
+- `public` 스키마의 테이블(센서 수집용 `experiments` 등, ERD 초안 테이블)은 백엔드가 쓰지 않는다. 건드리지 않는다.
+
 ### 착수 전 정리가 필요한 의존성 이슈
 - `spring-ai-starter-vector-store-s3` 가 들어 있으나 AI 인사이트 생성에는 **채팅 모델 starter**
   (`spring-ai-starter-model-openai` 등)가 필요하다. 벡터 스토어가 실제로 필요한지 확인 후 교체/추가할 것.

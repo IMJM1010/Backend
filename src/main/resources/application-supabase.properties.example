@@ -14,8 +14,8 @@
 #   - Transaction pooler(6543)는 prepared statement 를 지원하지 않아 Hibernate 와 맞지 않는다.
 #   → Session pooler(5432) 를 쓴다. 사용자 이름이 postgres.<project-ref> 형태다.
 #
-# 사전 준비 - Supabase SQL Editor 에서 스키마 생성:
-#   CREATE SCHEMA IF NOT EXISTS safety;
+# 스키마(테이블)는 이 앱이 만들지 않는다. 저장소의 supabase/migrations 가 Supabase GitHub 연동으로
+# 적용한다. 앱은 ddl-auto=validate 로 엔티티와 테이블이 맞는지만 확인한다. (README '스키마 변경 방법')
 #
 # 테이블을 public 이 아니라 safety 스키마에 두는 이유:
 #   Supabase 는 public 스키마를 Data API(PostgREST)로 자동 공개한다. 관리자 비밀번호 해시와
@@ -32,8 +32,9 @@ spring.datasource.hikari.maximum-pool-size=5
 
 # ---------- JPA ----------
 spring.jpa.properties.hibernate.default_schema=safety
-# 개발 초기에는 update, 스키마가 굳으면 validate 로 바꾸는 것을 권장한다.
-spring.jpa.hibernate.ddl-auto=update
+# 공용 DB 는 supabase/migrations 로만 바꾼다. update 로 두면 Hibernate 가 마이그레이션 기록 밖에서
+# 스키마를 바꿔 기록과 실제 DB 가 어긋난다. 엔티티와 테이블이 다르면 기동 시 실패해서 바로 알 수 있다.
+spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=false
 
 # ---------- JWT ----------
