@@ -55,6 +55,7 @@ public enum ErrorCode {
     ZONE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 구역입니다."),
     DUPLICATE_ZONE_CODE(HttpStatus.CONFLICT, "이미 사용 중인 구역 코드입니다."),
     ZONE_HAS_WORKERS(HttpStatus.CONFLICT, "소속 작업자가 존재하여 삭제할 수 없습니다."),
+    ZONE_HAS_SENSORS(HttpStatus.CONFLICT, "설치된 환경 센서가 존재하여 삭제할 수 없습니다."),
 
     /* ---------- 작업자 ---------- */
     WORKER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 작업자입니다."),

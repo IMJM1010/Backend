@@ -1,5 +1,8 @@
 package com.example.be.domain;
 
+import com.example.be.domain.envsensor.entity.EnvSensor;
+import com.example.be.domain.envsensor.entity.SensorType;
+import com.example.be.domain.envsensor.repository.EnvSensorRepository;
 import com.example.be.domain.manager.entity.Manager;
 import com.example.be.domain.manager.entity.ManagerRole;
 import com.example.be.domain.manager.repository.ManagerRepository;
@@ -58,6 +61,8 @@ class ListApiOutsideTransactionTest {
     @Autowired
     private WearableDeviceRepository deviceRepository;
     @Autowired
+    private EnvSensorRepository sensorRepository;
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private String token;
@@ -78,6 +83,7 @@ class ListApiOutsideTransactionTest {
     void tearDown() {
         // 커밋된 데이터라 롤백되지 않는다. FK 순서대로 지운다.
         deviceRepository.deleteAllInBatch();
+        sensorRepository.deleteAllInBatch();
         workerRepository.deleteAllInBatch();
         zoneRepository.deleteAllInBatch();
         processRepository.deleteAllInBatch();
@@ -122,6 +128,18 @@ class ListApiOutsideTransactionTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content[0].workerName").value("김철수"))
                 .andExpect(jsonPath("$.data.content[0].employeeNo").value("LZ-0001"));
+    }
+
+    @Test
+    @DisplayName("환경 센서 목록을 트랜잭션 밖에서 조회해도 구역 정보가 나온다")
+    void sensorList_withZone() throws Exception {
+        sensorRepository.save(EnvSensor.builder().zone(zone).sensorType(SensorType.NOISE).build());
+
+        mockMvc.perform(get("/api/env-sensors")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].zoneCode").value("LZ-1"))
+                .andExpect(jsonPath("$.data.content[0].zoneName").value("지연로딩구역"));
     }
 
     private String login() throws Exception {

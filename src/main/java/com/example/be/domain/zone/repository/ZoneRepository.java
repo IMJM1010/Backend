@@ -41,4 +41,8 @@ public interface ZoneRepository extends JpaRepository<Zone, Long> {
      */
     @Query("select count(w) from Worker w where w.zone.id = :zoneId and w.active = true")
     long countActiveWorkersOf(@Param("zoneId") Long zoneId);
+
+    /** 구역에 설치된 환경 센서 수. 구역 삭제 가드에 쓴다. (countActiveWorkersOf 와 같은 이유로 JPQL) */
+    @Query("select count(s) from EnvSensor s where s.zone.id = :zoneId")
+    long countSensorsOf(@Param("zoneId") Long zoneId);
 }

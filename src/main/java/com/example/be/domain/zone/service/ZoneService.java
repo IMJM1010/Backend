@@ -97,6 +97,9 @@ public class ZoneService {
      *
      * <p>재직 중인 작업자가 남아 있으면 거부한다. 구역을 지우면 그 작업자들의 위치 정보가
      * 사라져 현장 인원 현황이 어긋난다. 작업자를 먼저 다른 구역으로 옮기거나 퇴사 처리해야 한다.
+     *
+     * <p>설치된 환경 센서가 있어도 거부한다. 센서는 구역을 필수로 참조하므로 그대로 지우면
+     * 외래키 위반으로 실패한다. 센서를 다른 구역으로 옮기거나 철거한 뒤 지운다.
      */
     @Transactional
     public void delete(Long zoneId) {
@@ -104,6 +107,9 @@ public class ZoneService {
 
         if (zoneRepository.countActiveWorkersOf(zoneId) > 0) {
             throw new BusinessException(ErrorCode.ZONE_HAS_WORKERS);
+        }
+        if (zoneRepository.countSensorsOf(zoneId) > 0) {
+            throw new BusinessException(ErrorCode.ZONE_HAS_SENSORS);
         }
 
         zoneRepository.delete(zone);

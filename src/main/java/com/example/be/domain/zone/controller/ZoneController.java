@@ -1,5 +1,7 @@
 package com.example.be.domain.zone.controller;
 
+import com.example.be.domain.envsensor.dto.response.EnvSensorResponse;
+import com.example.be.domain.envsensor.service.EnvSensorService;
 import com.example.be.domain.zone.dto.request.ZoneCreateRequest;
 import com.example.be.domain.zone.dto.request.ZoneUpdateRequest;
 import com.example.be.domain.zone.dto.response.ZoneResponse;
@@ -39,6 +41,7 @@ public class ZoneController {
 
     private final ZoneService zoneService;
     private final WorkerService workerService;
+    private final EnvSensorService envSensorService;
 
     @Operation(summary = "구역 목록 조회", description = "processId 로 필터링할 수 있다. 기본 정렬은 구역 코드 오름차순.")
     @GetMapping
@@ -86,8 +89,17 @@ public class ZoneController {
                 workerService.getWorkersByZoneId(zoneId, pageable), WorkerResponse::from)));
     }
 
+    @Operation(summary = "구역 내 환경 센서 목록 조회", description = "해당 구역에 설치된 환경 센서를 조회한다.")
+    @GetMapping("/{zoneId}/env-sensors")
+    public ResponseEntity<ApiResponse<PageResponse<EnvSensorResponse>>> getEnvSensorsByZone(
+            @PathVariable Long zoneId, Pageable pageable) {
+
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(
+                envSensorService.getSensorsByZoneId(zoneId, pageable), EnvSensorResponse::from)));
+    }
+
     @Operation(summary = "구역 삭제",
-            description = "재직 중인 작업자가 남아 있으면 409 를 반환한다. ADMIN 전용.")
+            description = "재직 중인 작업자나 설치된 환경 센서가 남아 있으면 409 를 반환한다. ADMIN 전용.")
     @DeleteMapping("/{zoneId}")
     public ResponseEntity<Void> deleteZone(@PathVariable Long zoneId) {
         zoneService.delete(zoneId);
