@@ -86,6 +86,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/wearable-devices/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/wearable-devices/**").hasRole("ADMIN")
 
+                        // 환경 센서는 구역에 설치된 장비라 공정·구역과 같은 마스터 데이터로 본다.
+                        .requestMatchers(HttpMethod.POST, "/api/env-sensors").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/env-sensors/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/env-sensors/**").hasRole("ADMIN")
+
                         // 생체 기록 삭제는 이력 훼손이라 ADMIN 만.
                         .requestMatchers(HttpMethod.DELETE, "/api/vital-records/**").hasRole("ADMIN")
 

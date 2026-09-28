@@ -59,7 +59,13 @@
 ```
 
 ### 현재 상태 (2026-08-31)
-- **4단계 진행 중.** 웨어러블 디바이스 + 생체 기록 완료. 다음은 환경 센서 + 환경 기록.
+- **4단계 진행 중.** 웨어러블 디바이스 + 생체 기록 + 환경 센서 완료. 다음은 환경 기록(`env_records`).
+  - 환경 센서(`env_sensors`) 등록·수정·삭제는 ADMIN(현장 구조 마스터). 조회는 모든 관리자.
+  - `unit` 을 비워 보내면 `SensorType` 기본 단위(℃, %, ㎍/㎥, ppm, dB)로 채운다.
+    종류를 바꾸면서 단위를 안 보내면 새 종류의 기본 단위로 바뀐다.
+  - 임계값은 `min <= max` 여야 한다(`INVALID_THRESHOLD_RANGE`). 수정 시 한쪽만 보내면 기존 값과 합쳐 검사한다.
+  - 구역 삭제는 설치된 센서가 있으면 409(`ZONE_HAS_SENSORS`). 판정은 `ZoneRepository.countSensorsOf`(JPQL).
+  - 센서 삭제는 지금은 하드 삭제다. `env_records` 가 생기면 기록이 있는 센서는 409 로 막을 것.
   - **시계열 테이블 취급 원칙** (`vital_records`, 앞으로 `env_records` 도 동일)
     - 목록 조회에 `from`, `to` 를 **필수**로 강제하고 최대 기간을 7일로 제한한다.
       기간 없는 조회를 허용하면 프론트 실수 한 번으로 서버가 멈춘다.
@@ -89,7 +95,7 @@
   - **서비스 의존 방향은 구역 → 공정 한 방향만.** 공정 쪽에서 구역 수가 필요한 경우는
     `ProcessRepository` 의 JPQL(`countZonesOf`)로 해결해 순환 의존을 만들지 않는다.
     앞으로 도메인을 추가할 때도 이 원칙을 지킬 것: **부모가 자식 서비스를 참조하지 않는다.**
-  - 미구현으로 남긴 하위 리소스: `/processes/{id}/ai-insights`, `/zones/{id}/env-sensors`,
+  - 미구현으로 남긴 하위 리소스: `/processes/{id}/ai-insights`,
     `/zones/{id}/alerts`, `/workers/{id}/attendances`, `/workers/{id}/wearable-devices`,
     `/workers/{id}/alerts` — 각 도메인이 생긴 뒤에 붙인다.
 - **2단계 인증 완료.** Manager 도메인 + JWT 인증 + Auth API 4종 + Managers CRUD 7종. 다음은 3단계(공정/구역/작업자).
